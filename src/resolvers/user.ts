@@ -10,7 +10,7 @@ import argon2 from 'argon2';
 import { User } from '../entity/User';
 import { RegisterInput } from './RegisterInput';
 import { getConnection } from 'typeorm';
-import { LoginInput } from './LoginInput';
+import { registerValidator } from '../utils/registerValidator';
 
 @ObjectType()
 class FieldError {
@@ -36,11 +36,19 @@ export class UserResolver {
     return 'hiiiii';
   }
 
+  // @REGISTER MUTATION
   @Mutation(() => UserResponse)
   async register(
     @Arg('options') options: RegisterInput
     //@Ctx() { req }: myContext
   ): Promise<UserResponse> {
+    // Check for any validation errors
+    const errors = registerValidator(options);
+    if (errors) {
+      return { errors };
+    }
+
+    // Hash password
     const hashedPassword = await argon2.hash(options.password);
     let user;
 
@@ -59,12 +67,20 @@ export class UserResolver {
 
       user = result.raw[0];
     } catch (error) {
-      console.log(error);
+      return {
+        errors: [
+          {
+            field: 'Register Error',
+            message: 'Email or Username already taken.',
+          },
+        ],
+      };
     }
 
     return { user };
   }
 
+  // @LOGIN MUTATION
   @Mutation(() => UserResponse)
   async login(
     @Arg('usernameOrEmail') usernameOrEmail: string,
@@ -81,7 +97,7 @@ export class UserResolver {
       return {
         errors: [
           {
-            field: 'LoginInput',
+            field: 'Login Error',
             message: 'User does not exist.',
           },
         ],
@@ -94,8 +110,8 @@ export class UserResolver {
       return {
         errors: [
           {
-            field: 'password',
-            message: 'incorrect password',
+            field: 'Login',
+            message: 'Incorrect password.',
           },
         ],
       };

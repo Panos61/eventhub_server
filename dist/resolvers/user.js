@@ -30,6 +30,7 @@ const argon2_1 = __importDefault(require("argon2"));
 const User_1 = require("../entity/User");
 const RegisterInput_1 = require("./RegisterInput");
 const typeorm_1 = require("typeorm");
+const registerValidator_1 = require("../utils/registerValidator");
 let FieldError = class FieldError {
 };
 __decorate([
@@ -62,6 +63,10 @@ let UserResolver = class UserResolver {
     }
     register(options) {
         return __awaiter(this, void 0, void 0, function* () {
+            const errors = registerValidator_1.registerValidator(options);
+            if (errors) {
+                return { errors };
+            }
             const hashedPassword = yield argon2_1.default.hash(options.password);
             let user;
             try {
@@ -79,7 +84,14 @@ let UserResolver = class UserResolver {
                 user = result.raw[0];
             }
             catch (error) {
-                console.log(error);
+                return {
+                    errors: [
+                        {
+                            field: 'Register Error',
+                            message: 'Email or Username already taken.',
+                        },
+                    ],
+                };
             }
             return { user };
         });
@@ -93,7 +105,7 @@ let UserResolver = class UserResolver {
                 return {
                     errors: [
                         {
-                            field: 'LoginInput',
+                            field: 'Login Error',
                             message: 'User does not exist.',
                         },
                     ],
@@ -104,8 +116,8 @@ let UserResolver = class UserResolver {
                 return {
                     errors: [
                         {
-                            field: 'password',
-                            message: 'incorrect password',
+                            field: 'Login',
+                            message: 'Incorrect password.',
                         },
                     ],
                 };
