@@ -31,6 +31,8 @@ const User_1 = require("../entity/User");
 const RegisterInput_1 = require("./RegisterInput");
 const typeorm_1 = require("typeorm");
 const registerValidator_1 = require("../utils/registerValidator");
+const auth_1 = require("../auth/auth");
+const refreshToken_1 = require("../auth/refreshToken");
 let FieldError = class FieldError {
 };
 __decorate([
@@ -54,6 +56,10 @@ __decorate([
     type_graphql_1.Field(() => User_1.User, { nullable: true }),
     __metadata("design:type", User_1.User)
 ], UserResponse.prototype, "user", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], UserResponse.prototype, "accessToken", void 0);
 UserResponse = __decorate([
     type_graphql_1.ObjectType()
 ], UserResponse);
@@ -61,11 +67,11 @@ let UserResolver = class UserResolver {
     hello() {
         return 'hiiiii';
     }
-    register(options) {
+    register(options, { res }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = registerValidator_1.registerValidator(options);
             if (errors) {
-                return { errors };
+                return { errors, accessToken: '' };
             }
             const hashedPassword = yield argon2_1.default.hash(options.password);
             let user;
@@ -85,6 +91,7 @@ let UserResolver = class UserResolver {
             }
             catch (error) {
                 return {
+                    accessToken: '',
                     errors: [
                         {
                             field: 'Register Error',
@@ -93,16 +100,16 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            return { user };
+            refreshToken_1.refreshToken(res, auth_1.createRefreshToken(user));
+            return { user, accessToken: auth_1.createAccessToken(user) };
         });
     }
-    login(usernameOrEmail, password) {
+    login(email, password, { res }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield User_1.User.findOne(usernameOrEmail.includes('@')
-                ? { where: { email: usernameOrEmail } }
-                : { where: { username: usernameOrEmail } });
+            const user = yield User_1.User.findOne({ where: { email } });
             if (!user) {
                 return {
+                    accessToken: '',
                     errors: [
                         {
                             field: 'Login Error',
@@ -114,6 +121,7 @@ let UserResolver = class UserResolver {
             const valid = yield argon2_1.default.verify(user.password, password);
             if (!valid) {
                 return {
+                    accessToken: '',
                     errors: [
                         {
                             field: 'Login',
@@ -122,7 +130,14 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            return { user };
+            refreshToken_1.refreshToken(res, auth_1.createRefreshToken(user));
+            return { user, accessToken: auth_1.createAccessToken(user) };
+        });
+    }
+    logout({ res }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            refreshToken_1.refreshToken(res, '');
+            return true;
         });
     }
 };
@@ -135,18 +150,27 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => UserResponse),
     __param(0, type_graphql_1.Arg('options')),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [RegisterInput_1.RegisterInput]),
+    __metadata("design:paramtypes", [RegisterInput_1.RegisterInput, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "register", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse),
-    __param(0, type_graphql_1.Arg('usernameOrEmail')),
+    __param(0, type_graphql_1.Arg('email')),
     __param(1, type_graphql_1.Arg('password')),
+    __param(2, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    __param(0, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "logout", null);
 UserResolver = __decorate([
     type_graphql_1.Resolver()
 ], UserResolver);

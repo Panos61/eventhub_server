@@ -44,6 +44,10 @@ __decorate([
     typeorm_1.UpdateDateColumn(),
     __metadata("design:type", Date)
 ], User.prototype, "updatedAt", void 0);
+__decorate([
+    typeorm_1.Column('int', { default: 0 }),
+    __metadata("design:type", Number)
+], User.prototype, "tokenVersion", void 0);
 User = __decorate([
     type_graphql_1.ObjectType(),
     typeorm_1.Entity('users')

@@ -4,9 +4,46 @@ import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
 import { UserResolver } from './resolvers/user';
+import cookieParser from 'cookie-parser';
+import { verify } from 'jsonwebtoken';
+import { createAccessToken, createRefreshToken } from './auth/auth';
+import { User } from './entity/User';
+import { refreshToken } from './auth/refreshToken';
 
 (async () => {
   const app = express();
+  app.use(cookieParser());
+
+  app.post('/refresh-token', async (req, res) => {
+    const token = req.cookies.ehc;
+    if (!token) {
+      return res.send({ ok: true, accessToken: '' });
+    }
+    console.log(req.cookies);
+
+    let payload: any = null;
+    try {
+      payload = verify(token, process.env.REFRESH_TOKEN_SECRET!);
+    } catch (error) {
+      console.log(error);
+      return res.send({ ok: false, accessToken: '' });
+    }
+
+    // if token is valid, send back an access token
+    const user = await User.findOne({ id: payload.userID });
+
+    if (!user) {
+      return res.send({ ok: false, accessToken: '' });
+    }
+
+    if (user.tokenVersion !== payload.token) {
+      res.send({ ok: false, accessToken: '' });
+    }
+
+    refreshToken(res, createRefreshToken(user));
+
+    return res.send({ ok: true, accessToken: createAccessToken(user) });
+  });
 
   await createConnection();
 
@@ -18,10 +55,10 @@ import { UserResolver } from './resolvers/user';
     context: ({ req, res }) => ({ req, res }),
   });
 
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({ app, cors: false });
 
   app.listen(4000, () => {
-    console.log('Server at 4000');
+    console.log('Server running at 4000');
   });
 })().catch((err) => {
   console.log(err);

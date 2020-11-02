@@ -1,16 +1,20 @@
 import {
   Arg,
+  Ctx,
   Field,
   Mutation,
   ObjectType,
   Query,
   Resolver,
 } from 'type-graphql';
+import { myContext } from '../types';
 import argon2 from 'argon2';
 import { User } from '../entity/User';
 import { RegisterInput } from './RegisterInput';
 import { getConnection } from 'typeorm';
 import { registerValidator } from '../utils/registerValidator';
+import { createAccessToken, createRefreshToken } from '../auth/auth';
+import { refreshToken } from '../auth/refreshToken';
 
 @ObjectType()
 class FieldError {
@@ -27,6 +31,9 @@ class UserResponse {
 
   @Field(() => User, { nullable: true })
   user?: User;
+
+  @Field()
+  accessToken?: string;
 }
 
 @Resolver()
@@ -39,13 +46,13 @@ export class UserResolver {
   // @REGISTER MUTATION
   @Mutation(() => UserResponse)
   async register(
-    @Arg('options') options: RegisterInput
-    //@Ctx() { req }: myContext
+    @Arg('options') options: RegisterInput,
+    @Ctx() { res }: myContext
   ): Promise<UserResponse> {
     // Check for any validation errors
     const errors = registerValidator(options);
     if (errors) {
-      return { errors };
+      return { errors, accessToken: '' };
     }
 
     // Hash password
@@ -68,6 +75,7 @@ export class UserResolver {
       user = result.raw[0];
     } catch (error) {
       return {
+        accessToken: '',
         errors: [
           {
             field: 'Register Error',
@@ -77,24 +85,23 @@ export class UserResolver {
       };
     }
 
-    return { user };
+    refreshToken(res, createRefreshToken(user));
+
+    return { user, accessToken: createAccessToken(user) };
   }
 
   // @LOGIN MUTATION
   @Mutation(() => UserResponse)
   async login(
-    @Arg('usernameOrEmail') usernameOrEmail: string,
-    @Arg('password') password: string
-    //@Ctx() { req }: myContext
+    @Arg('email') email: string,
+    @Arg('password') password: string,
+    @Ctx() { res }: myContext
   ): Promise<UserResponse> {
     // Check if user does not exist
-    const user = await User.findOne(
-      usernameOrEmail.includes('@')
-        ? { where: { email: usernameOrEmail } }
-        : { where: { username: usernameOrEmail } }
-    );
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       return {
+        accessToken: '',
         errors: [
           {
             field: 'Login Error',
@@ -108,6 +115,7 @@ export class UserResolver {
     const valid = await argon2.verify(user.password, password);
     if (!valid) {
       return {
+        accessToken: '',
         errors: [
           {
             field: 'Login',
@@ -117,6 +125,16 @@ export class UserResolver {
       };
     }
 
-    return { user };
+    refreshToken(res, createRefreshToken(user));
+
+    return { user, accessToken: createAccessToken(user) };
+  }
+
+  // @LOGOUT MUTATION
+  @Mutation(() => Boolean)
+  async logout(@Ctx() { res }: myContext) {
+    refreshToken(res, '');
+
+    return true;
   }
 }

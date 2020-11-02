@@ -34,4 +34,7 @@ export class User extends BaseEntity {
   @Field(() => String)
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column('int', { default: 0 })
+  tokenVersion: number;
 }
