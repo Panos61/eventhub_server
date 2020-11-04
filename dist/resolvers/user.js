@@ -33,6 +33,7 @@ const typeorm_1 = require("typeorm");
 const registerValidator_1 = require("../utils/registerValidator");
 const auth_1 = require("../auth/auth");
 const refreshToken_1 = require("../auth/refreshToken");
+const jsonwebtoken_1 = require("jsonwebtoken");
 let FieldError = class FieldError {
 };
 __decorate([
@@ -66,6 +67,21 @@ UserResponse = __decorate([
 let UserResolver = class UserResolver {
     hello() {
         return 'hiiiii';
+    }
+    me(context) {
+        const authorization = context.req.headers['authorization'];
+        if (!authorization) {
+            return null;
+        }
+        try {
+            const token = authorization.split(' ')[1];
+            const payload = jsonwebtoken_1.verify(token, process.env.ACCESS_TOKEN_SECRET);
+            return User_1.User.findOne(payload.userID);
+        }
+        catch (err) {
+            console.log(err);
+            return null;
+        }
     }
     register(options, { res }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -147,6 +163,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "hello", null);
+__decorate([
+    type_graphql_1.Query(() => User_1.User, { nullable: true }),
+    __param(0, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "me", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse),
     __param(0, type_graphql_1.Arg('options')),

@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { createConnection } from 'typeorm';
 import express from 'express';
+import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
 import { UserResolver } from './resolvers/user';
@@ -12,32 +13,41 @@ import { refreshToken } from './auth/refreshToken';
 
 (async () => {
   const app = express();
+
+  //app.use('/graphql', cors());
+  app.use(
+    cors({
+      origin: 'http://localhost:3000',
+      credentials: true,
+    })
+  );
+
   app.use(cookieParser());
 
   app.post('/refresh-token', async (req, res) => {
     const token = req.cookies.ehc;
     if (!token) {
-      return res.send({ ok: true, accessToken: '' });
+      return res.send({ ok: false, accessToken: '' });
     }
-    console.log(req.cookies);
 
     let payload: any = null;
     try {
       payload = verify(token, process.env.REFRESH_TOKEN_SECRET!);
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.log(err);
       return res.send({ ok: false, accessToken: '' });
     }
 
-    // if token is valid, send back an access token
+    // token is valid and
+    // we can send back an access token
     const user = await User.findOne({ id: payload.userID });
 
     if (!user) {
       return res.send({ ok: false, accessToken: '' });
     }
 
-    if (user.tokenVersion !== payload.token) {
-      res.send({ ok: false, accessToken: '' });
+    if (user.tokenVersion !== payload.tokenVersion) {
+      return res.send({ ok: false, accessToken: '' });
     }
 
     refreshToken(res, createRefreshToken(user));
@@ -55,7 +65,10 @@ import { refreshToken } from './auth/refreshToken';
     context: ({ req, res }) => ({ req, res }),
   });
 
-  apolloServer.applyMiddleware({ app, cors: false });
+  apolloServer.applyMiddleware({
+    app,
+    cors: false,
+  });
 
   app.listen(4000, () => {
     console.log('Server running at 4000');

@@ -6,6 +6,7 @@ import {
   ObjectType,
   Query,
   Resolver,
+  UseMiddleware,
 } from 'type-graphql';
 import { myContext } from '../types';
 import argon2 from 'argon2';
@@ -15,6 +16,8 @@ import { getConnection } from 'typeorm';
 import { registerValidator } from '../utils/registerValidator';
 import { createAccessToken, createRefreshToken } from '../auth/auth';
 import { refreshToken } from '../auth/refreshToken';
+import { verify } from 'jsonwebtoken';
+import { isAuth } from '../auth/isAuth';
 
 @ObjectType()
 class FieldError {
@@ -41,6 +44,25 @@ export class UserResolver {
   @Query(() => String)
   hello() {
     return 'hiiiii';
+  }
+
+  // @ME QUERY
+  @Query(() => User, { nullable: true })
+  me(@Ctx() context: myContext) {
+    const authorization = context.req.headers['authorization'];
+
+    if (!authorization) {
+      return null;
+    }
+
+    try {
+      const token = authorization.split(' ')[1];
+      const payload: any = verify(token, process.env.ACCESS_TOKEN_SECRET!);
+      return User.findOne(payload.userID);
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   // @REGISTER MUTATION
