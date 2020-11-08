@@ -6,28 +6,32 @@ import {
   BaseEntity,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
+  ManyToOne,
 } from 'typeorm';
-import { Event } from './Event';
+import { User } from './User';
 
 @ObjectType()
-@Entity('users')
-export class User extends BaseEntity {
+@Entity('events')
+export class Event extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 
   @Field()
-  @Column('text', { unique: true })
-  email!: string;
-
-  @Field()
-  @Column('text', { unique: true })
-  username!: string;
+  @Column('varchar', { unique: true })
+  title!: string;
 
   @Field()
   @Column('text')
-  password!: string;
+  topic!: string;
+
+  @Field()
+  @Column('text')
+  description!: string;
+
+  @Field(() => User)
+  @ManyToOne(() => User, (user) => user.events)
+  creator: User;
 
   @Field(() => String)
   @CreateDateColumn()
@@ -36,10 +40,4 @@ export class User extends BaseEntity {
   @Field(() => String)
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @Column('int', { default: 0 })
-  tokenVersion: number;
-
-  @OneToMany(() => Event, (event) => event.creator)
-  events: Event[];
 }

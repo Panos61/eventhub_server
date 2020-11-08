@@ -9,53 +9,50 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = void 0;
+exports.Event = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
-const Event_1 = require("./Event");
-let User = class User extends typeorm_1.BaseEntity {
+const User_1 = require("./User");
+let Event = class Event extends typeorm_1.BaseEntity {
 };
 __decorate([
     type_graphql_1.Field(),
     typeorm_1.PrimaryGeneratedColumn(),
     __metadata("design:type", Number)
-], User.prototype, "id", void 0);
+], Event.prototype, "id", void 0);
 __decorate([
     type_graphql_1.Field(),
-    typeorm_1.Column('text', { unique: true }),
+    typeorm_1.Column('varchar', { unique: true }),
     __metadata("design:type", String)
-], User.prototype, "email", void 0);
-__decorate([
-    type_graphql_1.Field(),
-    typeorm_1.Column('text', { unique: true }),
-    __metadata("design:type", String)
-], User.prototype, "username", void 0);
+], Event.prototype, "title", void 0);
 __decorate([
     type_graphql_1.Field(),
     typeorm_1.Column('text'),
     __metadata("design:type", String)
-], User.prototype, "password", void 0);
+], Event.prototype, "topic", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    typeorm_1.Column('text'),
+    __metadata("design:type", String)
+], Event.prototype, "description", void 0);
+__decorate([
+    type_graphql_1.Field(() => User_1.User),
+    typeorm_1.ManyToOne(() => User_1.User, (user) => user.events),
+    __metadata("design:type", User_1.User)
+], Event.prototype, "creator", void 0);
 __decorate([
     type_graphql_1.Field(() => String),
     typeorm_1.CreateDateColumn(),
     __metadata("design:type", Date)
-], User.prototype, "createdAt", void 0);
+], Event.prototype, "createdAt", void 0);
 __decorate([
     type_graphql_1.Field(() => String),
     typeorm_1.UpdateDateColumn(),
     __metadata("design:type", Date)
-], User.prototype, "updatedAt", void 0);
-__decorate([
-    typeorm_1.Column('int', { default: 0 }),
-    __metadata("design:type", Number)
-], User.prototype, "tokenVersion", void 0);
-__decorate([
-    typeorm_1.OneToMany(() => Event_1.Event, (event) => event.creator),
-    __metadata("design:type", Array)
-], User.prototype, "events", void 0);
-User = __decorate([
+], Event.prototype, "updatedAt", void 0);
+Event = __decorate([
     type_graphql_1.ObjectType(),
-    typeorm_1.Entity('users')
-], User);
-exports.User = User;
-//# sourceMappingURL=User.js.map
+    typeorm_1.Entity('events')
+], Event);
+exports.Event = Event;
+//# sourceMappingURL=Event.js.map

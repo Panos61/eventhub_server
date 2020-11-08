@@ -24,6 +24,7 @@ const jsonwebtoken_1 = require("jsonwebtoken");
 const auth_1 = require("./auth/auth");
 const User_1 = require("./entity/User");
 const refreshToken_1 = require("./auth/refreshToken");
+const event_1 = require("./resolvers/event");
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const app = express_1.default();
     app.use(cors_1.default({
@@ -57,7 +58,7 @@ const refreshToken_1 = require("./auth/refreshToken");
     yield typeorm_1.createConnection();
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema: yield type_graphql_1.buildSchema({
-            resolvers: [user_1.UserResolver],
+            resolvers: [user_1.UserResolver, event_1.EventResolver],
             validate: false,
         }),
         context: ({ req, res }) => ({ req, res }),

@@ -10,6 +10,7 @@ import { verify } from 'jsonwebtoken';
 import { createAccessToken, createRefreshToken } from './auth/auth';
 import { User } from './entity/User';
 import { refreshToken } from './auth/refreshToken';
+import { EventResolver } from './resolvers/event';
 
 (async () => {
   const app = express();
@@ -59,7 +60,7 @@ import { refreshToken } from './auth/refreshToken';
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver],
+      resolvers: [UserResolver, EventResolver],
       validate: false,
     }),
     context: ({ req, res }) => ({ req, res }),

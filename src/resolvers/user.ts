@@ -6,7 +6,6 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware,
 } from 'type-graphql';
 import { myContext } from '../types';
 import argon2 from 'argon2';
