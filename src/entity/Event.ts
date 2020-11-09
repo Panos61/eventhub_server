@@ -1,4 +1,4 @@
-import { Field, ObjectType } from 'type-graphql';
+import { Field, Int, ObjectType } from 'type-graphql';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -29,7 +29,11 @@ export class Event extends BaseEntity {
   @Column('text')
   description!: string;
 
-  @Field(() => User)
+  @Field(() => Int)
+  @Column({ nullable: true })
+  creatorId: number | string;
+
+  @Field(() => User, { nullable: true })
   @ManyToOne(() => User, (user) => user.events)
   creator: User;
 

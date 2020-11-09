@@ -8,13 +8,88 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventResolver = void 0;
+const eventValidator_1 = require("../utils/eventValidator");
 const type_graphql_1 = require("type-graphql");
+const typeorm_1 = require("typeorm");
 const Event_1 = require("../entity/Event");
+const EventInput_1 = require("./EventInput");
+let FieldErrorEvent = class FieldErrorEvent {
+};
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], FieldErrorEvent.prototype, "field", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], FieldErrorEvent.prototype, "message", void 0);
+FieldErrorEvent = __decorate([
+    type_graphql_1.ObjectType()
+], FieldErrorEvent);
+let EventResponse = class EventResponse {
+};
+__decorate([
+    type_graphql_1.Field(() => [FieldErrorEvent], { nullable: true }),
+    __metadata("design:type", Array)
+], EventResponse.prototype, "errors", void 0);
+__decorate([
+    type_graphql_1.Field(() => Event_1.Event, { nullable: true }),
+    __metadata("design:type", Event_1.Event)
+], EventResponse.prototype, "event", void 0);
+EventResponse = __decorate([
+    type_graphql_1.ObjectType()
+], EventResponse);
 let EventResolver = class EventResolver {
     event() {
         return 'event query';
+    }
+    createEvent(options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const errors = eventValidator_1.eventValidator(options);
+            if (errors) {
+                return { errors };
+            }
+            let event;
+            try {
+                const result = yield typeorm_1.getConnection()
+                    .createQueryBuilder()
+                    .insert()
+                    .into(Event_1.Event)
+                    .values(Object.assign(Object.assign({}, options), { creatorId: '10' }))
+                    .returning('*')
+                    .execute();
+                event = result.raw[0];
+            }
+            catch (error) {
+                console.log(error);
+                return {
+                    errors: [
+                        {
+                            field: 'Event Error',
+                            message: 'Unexpected error during the event creation.',
+                        },
+                    ],
+                };
+            }
+            return { event };
+        });
+    }
+    findEvent(id) {
+        return Event_1.Event.findOne(id);
     }
 };
 __decorate([
@@ -23,6 +98,20 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], EventResolver.prototype, "event", null);
+__decorate([
+    type_graphql_1.Mutation(() => EventResponse),
+    __param(0, type_graphql_1.Arg('options')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [EventInput_1.EventInput]),
+    __metadata("design:returntype", Promise)
+], EventResolver.prototype, "createEvent", null);
+__decorate([
+    type_graphql_1.Query(() => Event_1.Event, { nullable: true }),
+    __param(0, type_graphql_1.Arg('id', () => type_graphql_1.Int)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], EventResolver.prototype, "findEvent", null);
 EventResolver = __decorate([
     type_graphql_1.Resolver(Event_1.Event)
 ], EventResolver);

@@ -36,7 +36,12 @@ __decorate([
     __metadata("design:type", String)
 ], Event.prototype, "description", void 0);
 __decorate([
-    type_graphql_1.Field(() => User_1.User),
+    type_graphql_1.Field(() => type_graphql_1.Int),
+    typeorm_1.Column({ nullable: true }),
+    __metadata("design:type", Object)
+], Event.prototype, "creatorId", void 0);
+__decorate([
+    type_graphql_1.Field(() => User_1.User, { nullable: true }),
     typeorm_1.ManyToOne(() => User_1.User, (user) => user.events),
     __metadata("design:type", User_1.User)
 ], Event.prototype, "creator", void 0);
