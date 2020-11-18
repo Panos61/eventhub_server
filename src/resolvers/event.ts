@@ -15,6 +15,7 @@ import { Event } from '../entity/Event';
 import { EventInput } from './EventInput';
 import { isAuth } from '../auth/isAuth';
 import { myContext } from 'src/types';
+import { User } from '../entity/User';
 
 @ObjectType()
 class FieldErrorEvent {
@@ -43,10 +44,10 @@ export class EventResolver {
 
   // @ MUTATION - CREATE EVENT
   @Mutation(() => EventResponse)
-  //@UseMiddleware(isAuth)
+  @UseMiddleware(isAuth)
   async createEvent(
-    @Arg('options') options: EventInput
-    // @Ctx() { payload }: myContext
+    @Arg('options') options: EventInput,
+    @Ctx() { payload }: myContext
   ): Promise<EventResponse> {
     // Check for any validation errors
     const errors = eventValidator(options);
@@ -64,13 +65,13 @@ export class EventResolver {
         .into(Event)
         .values({
           ...options,
-          //creatorId: payload?.userID,
-          creatorId: '10',
+          creatorId: payload?.userID,
         })
         .returning('*')
         .execute();
 
       event = result.raw[0];
+      console.log(payload?.userID);
     } catch (error) {
       console.log(error);
       return {
@@ -90,5 +91,55 @@ export class EventResolver {
   @Query(() => Event, { nullable: true })
   findEvent(@Arg('id', () => Int) id: number): Promise<Event | undefined> {
     return Event.findOne(id);
+  }
+
+  // @QUERY - FIND ALL EVENTS
+  @Query(() => [Event], { nullable: true })
+  async events(
+    @Arg('limit', () => Int) limit: number,
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
+  ): Promise<Event[]> {
+    const realLimit = Math.min(50, limit);
+
+    const qb = getConnection()
+      .getRepository(Event)
+      .createQueryBuilder('e')
+      .orderBy('"createdAt"', 'DESC')
+      .take(realLimit);
+
+    if (cursor) {
+      qb.where('"createdAt" < :cursor', {
+        cursor: new Date(parseInt(cursor)),
+      });
+    }
+
+    return qb.getMany();
+  }
+
+  // @QUERY - FIND MUSIC EVENTS
+  @Query(() => [Event], { nullable: true })
+  async musicEvents(
+    @Arg('limit', () => Int) limit: number,
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
+  ): Promise<Event[]> {
+    const realLimit = Math.min(50, limit);
+
+    const qb = getConnection()
+      .getRepository(Event)
+      .createQueryBuilder('e')
+      .orderBy('"createdAt"', 'DESC')
+      .take(realLimit);
+
+    if (cursor) {
+      qb.where('"createdAt" < :cursor', {
+        cursor: new Date(parseInt(cursor)),
+      });
+    }
+
+    const query = getConnection()
+      .getRepository(Event)
+      .find({ where: { topic: 'music' } });
+
+    return qb.getMany(), query;
   }
 }

@@ -27,6 +27,7 @@ const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Event_1 = require("../entity/Event");
 const EventInput_1 = require("./EventInput");
+const isAuth_1 = require("../auth/isAuth");
 let FieldErrorEvent = class FieldErrorEvent {
 };
 __decorate([
@@ -57,7 +58,7 @@ let EventResolver = class EventResolver {
     event() {
         return 'event query';
     }
-    createEvent(options) {
+    createEvent(options, { payload }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = eventValidator_1.eventValidator(options);
             if (errors) {
@@ -69,10 +70,11 @@ let EventResolver = class EventResolver {
                     .createQueryBuilder()
                     .insert()
                     .into(Event_1.Event)
-                    .values(Object.assign(Object.assign({}, options), { creatorId: '10' }))
+                    .values(Object.assign(Object.assign({}, options), { creatorId: payload === null || payload === void 0 ? void 0 : payload.userID }))
                     .returning('*')
                     .execute();
                 event = result.raw[0];
+                console.log(payload === null || payload === void 0 ? void 0 : payload.userID);
             }
             catch (error) {
                 console.log(error);
@@ -91,6 +93,41 @@ let EventResolver = class EventResolver {
     findEvent(id) {
         return Event_1.Event.findOne(id);
     }
+    events(limit, cursor) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const realLimit = Math.min(50, limit);
+            const qb = typeorm_1.getConnection()
+                .getRepository(Event_1.Event)
+                .createQueryBuilder('e')
+                .orderBy('"createdAt"', 'DESC')
+                .take(realLimit);
+            if (cursor) {
+                qb.where('"createdAt" < :cursor', {
+                    cursor: new Date(parseInt(cursor)),
+                });
+            }
+            return qb.getMany();
+        });
+    }
+    musicEvents(limit, cursor) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const realLimit = Math.min(50, limit);
+            const qb = typeorm_1.getConnection()
+                .getRepository(Event_1.Event)
+                .createQueryBuilder('e')
+                .orderBy('"createdAt"', 'DESC')
+                .take(realLimit);
+            if (cursor) {
+                qb.where('"createdAt" < :cursor', {
+                    cursor: new Date(parseInt(cursor)),
+                });
+            }
+            const query = typeorm_1.getConnection()
+                .getRepository(Event_1.Event)
+                .find({ where: { topic: 'music' } });
+            return qb.getMany(), query;
+        });
+    }
 };
 __decorate([
     type_graphql_1.Query(() => String),
@@ -100,9 +137,11 @@ __decorate([
 ], EventResolver.prototype, "event", null);
 __decorate([
     type_graphql_1.Mutation(() => EventResponse),
+    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
     __param(0, type_graphql_1.Arg('options')),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [EventInput_1.EventInput]),
+    __metadata("design:paramtypes", [EventInput_1.EventInput, Object]),
     __metadata("design:returntype", Promise)
 ], EventResolver.prototype, "createEvent", null);
 __decorate([
@@ -112,6 +151,22 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], EventResolver.prototype, "findEvent", null);
+__decorate([
+    type_graphql_1.Query(() => [Event_1.Event], { nullable: true }),
+    __param(0, type_graphql_1.Arg('limit', () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Arg('cursor', () => String, { nullable: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], EventResolver.prototype, "events", null);
+__decorate([
+    type_graphql_1.Query(() => [Event_1.Event], { nullable: true }),
+    __param(0, type_graphql_1.Arg('limit', () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Arg('cursor', () => String, { nullable: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], EventResolver.prototype, "musicEvents", null);
 EventResolver = __decorate([
     type_graphql_1.Resolver(Event_1.Event)
 ], EventResolver);

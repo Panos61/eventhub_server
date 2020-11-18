@@ -37,7 +37,7 @@ __decorate([
 ], Event.prototype, "description", void 0);
 __decorate([
     type_graphql_1.Field(() => type_graphql_1.Int),
-    typeorm_1.Column({ nullable: true }),
+    typeorm_1.Column(),
     __metadata("design:type", Object)
 ], Event.prototype, "creatorId", void 0);
 __decorate([
