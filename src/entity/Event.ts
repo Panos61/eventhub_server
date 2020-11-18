@@ -30,7 +30,7 @@ export class Event extends BaseEntity {
   description!: string;
 
   @Field(() => Int)
-  @Column({ nullable: true })
+  @Column()
   creatorId: number | string;
 
   @Field(() => User, { nullable: true })
