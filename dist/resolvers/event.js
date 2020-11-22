@@ -55,7 +55,7 @@ EventResponse = __decorate([
     type_graphql_1.ObjectType()
 ], EventResponse);
 let EventResolver = class EventResolver {
-    event() {
+    hello() {
         return 'event query';
     }
     createEvent(options, { payload }) {
@@ -90,7 +90,7 @@ let EventResolver = class EventResolver {
             return { event };
         });
     }
-    findEvent(id) {
+    event(id) {
         return Event_1.Event.findOne(id);
     }
     events(limit, cursor) {
@@ -134,7 +134,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
-], EventResolver.prototype, "event", null);
+], EventResolver.prototype, "hello", null);
 __decorate([
     type_graphql_1.Mutation(() => EventResponse),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
@@ -150,7 +150,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
-], EventResolver.prototype, "findEvent", null);
+], EventResolver.prototype, "event", null);
 __decorate([
     type_graphql_1.Query(() => [Event_1.Event], { nullable: true }),
     __param(0, type_graphql_1.Arg('limit', () => type_graphql_1.Int)),

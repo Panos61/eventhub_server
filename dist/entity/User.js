@@ -16,9 +16,9 @@ const Event_1 = require("./Event");
 let User = class User extends typeorm_1.BaseEntity {
 };
 __decorate([
-    type_graphql_1.Field(),
+    type_graphql_1.Field(() => type_graphql_1.Int),
     typeorm_1.PrimaryGeneratedColumn(),
-    __metadata("design:type", Number)
+    __metadata("design:type", Object)
 ], User.prototype, "id", void 0);
 __decorate([
     type_graphql_1.Field(),

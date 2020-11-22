@@ -34,6 +34,7 @@ const registerValidator_1 = require("../utils/registerValidator");
 const auth_1 = require("../auth/auth");
 const refreshToken_1 = require("../auth/refreshToken");
 const jsonwebtoken_1 = require("jsonwebtoken");
+const isAuth_1 = require("../auth/isAuth");
 let FieldError = class FieldError {
 };
 __decorate([
@@ -58,7 +59,7 @@ __decorate([
     __metadata("design:type", User_1.User)
 ], UserResponse.prototype, "user", void 0);
 __decorate([
-    type_graphql_1.Field(),
+    type_graphql_1.Field({ nullable: true }),
     __metadata("design:type", String)
 ], UserResponse.prototype, "accessToken", void 0);
 UserResponse = __decorate([
@@ -129,7 +130,7 @@ let UserResolver = class UserResolver {
                     errors: [
                         {
                             field: 'Login Error',
-                            message: 'User does not exist.',
+                            message: 'Ο χρήστης δεν υπάρχει.',
                         },
                     ],
                 };
@@ -140,8 +141,8 @@ let UserResolver = class UserResolver {
                     accessToken: '',
                     errors: [
                         {
-                            field: 'Login',
-                            message: 'Incorrect password.',
+                            field: 'Login Error',
+                            message: 'Λάθος κωδικός.',
                         },
                     ],
                 };
@@ -153,6 +154,27 @@ let UserResolver = class UserResolver {
     logout({ res }) {
         return __awaiter(this, void 0, void 0, function* () {
             refreshToken_1.refreshToken(res, '');
+            return true;
+        });
+    }
+    deleteAccount(id, { payload, res }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield User_1.User.findOne({ where: { id: payload === null || payload === void 0 ? void 0 : payload.userID } });
+            if (!user) {
+                return false;
+            }
+            try {
+                yield typeorm_1.getConnection()
+                    .getRepository(User_1.User)
+                    .createQueryBuilder()
+                    .delete()
+                    .where('id = :id', { id: id })
+                    .execute();
+                refreshToken_1.refreshToken(res, '');
+            }
+            catch (error) {
+                console.log(error);
+            }
             return true;
         });
     }
@@ -194,6 +216,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "logout", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    __param(0, type_graphql_1.Arg('id')),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "deleteAccount", null);
 UserResolver = __decorate([
     type_graphql_1.Resolver()
 ], UserResolver);

@@ -1,4 +1,4 @@
-import { Field, ObjectType } from 'type-graphql';
+import { Field, Float, Int, ObjectType } from 'type-graphql';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -13,9 +13,9 @@ import { Event } from './Event';
 @ObjectType()
 @Entity('users')
 export class User extends BaseEntity {
-  @Field()
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
-  id!: number;
+  id!: number | string;
 
   @Field()
   @Column('text', { unique: true })

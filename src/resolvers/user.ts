@@ -6,6 +6,7 @@ import {
   ObjectType,
   Query,
   Resolver,
+  UseMiddleware,
 } from 'type-graphql';
 import { myContext } from '../types';
 import argon2 from 'argon2';
@@ -34,7 +35,7 @@ class UserResponse {
   @Field(() => User, { nullable: true })
   user?: User;
 
-  @Field()
+  @Field({ nullable: true })
   accessToken?: string;
 }
 
@@ -71,6 +72,7 @@ export class UserResolver {
     @Ctx() { res }: myContext
   ): Promise<UserResponse> {
     // Check for any validation errors
+
     const errors = registerValidator(options);
     if (errors) {
       return { errors, accessToken: '' };
@@ -126,7 +128,7 @@ export class UserResolver {
         errors: [
           {
             field: 'Login Error',
-            message: 'User does not exist.',
+            message: 'Ο χρήστης δεν υπάρχει.',
           },
         ],
       };
@@ -139,8 +141,8 @@ export class UserResolver {
         accessToken: '',
         errors: [
           {
-            field: 'Login',
-            message: 'Incorrect password.',
+            field: 'Login Error',
+            message: 'Λάθος κωδικός.',
           },
         ],
       };
@@ -156,6 +158,33 @@ export class UserResolver {
   async logout(@Ctx() { res }: myContext) {
     refreshToken(res, '');
 
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async deleteAccount(
+    @Arg('id') id: number,
+    @Ctx() { payload, res }: myContext
+  ) {
+    // Check if user exists
+    const user = await User.findOne({ where: { id: payload?.userID } });
+    if (!user) {
+      return false;
+    }
+
+    try {
+      await getConnection()
+        .getRepository(User)
+        .createQueryBuilder()
+        .delete()
+        .where('id = :id', { id: id })
+        .execute();
+
+      refreshToken(res, '');
+    } catch (error) {
+      console.log(error);
+    }
     return true;
   }
 }
