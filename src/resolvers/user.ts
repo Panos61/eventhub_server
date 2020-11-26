@@ -18,6 +18,7 @@ import { createAccessToken, createRefreshToken } from '../auth/auth';
 import { refreshToken } from '../auth/refreshToken';
 import { verify } from 'jsonwebtoken';
 import { isAuth } from '../auth/isAuth';
+import { FORGOT_PASSWORD_PREFIX } from '../constants';
 
 @ObjectType()
 class FieldError {
@@ -186,5 +187,61 @@ export class UserResolver {
       console.log(error);
     }
     return true;
+  }
+
+  @Mutation(() => UserResponse)
+  @UseMiddleware(isAuth)
+  async changePassword(
+    @Arg('oldPassword') oldPassword: string,
+    @Arg('newPassword') newPassword: string,
+    @Ctx() { payload, res }: myContext
+  ): Promise<UserResponse> {
+    // Check if user exists
+    const user = await User.findOne({ where: { id: payload?.userID } });
+    if (!user) {
+      return {
+        errors: [
+          {
+            field: 'User not found',
+            message: 'User does not exist',
+          },
+        ],
+      };
+    }
+
+    const valid = await argon2.verify(user?.password, oldPassword);
+    if (!valid) {
+      return {
+        errors: [
+          {
+            field: 'Wrong password',
+            message: 'Wrong password',
+          },
+        ],
+      };
+    }
+
+    // Validate new password
+    if (newPassword.length <= 6) {
+      return {
+        errors: [
+          {
+            field: 'Password Error',
+            message: 'Password length must be greater than 6 characters',
+          },
+        ],
+      };
+    }
+
+    await User.update(
+      { id: payload?.userID },
+      {
+        password: await argon2.hash(newPassword),
+      }
+    );
+
+    refreshToken(res, createRefreshToken(user));
+
+    return { user, accessToken: createAccessToken(user) };
   }
 }

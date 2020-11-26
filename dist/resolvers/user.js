@@ -178,6 +178,47 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
+    changePassword(oldPassword, newPassword, { payload, res }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield User_1.User.findOne({ where: { id: payload === null || payload === void 0 ? void 0 : payload.userID } });
+            if (!user) {
+                return {
+                    errors: [
+                        {
+                            field: 'User not found',
+                            message: 'User does not exist',
+                        },
+                    ],
+                };
+            }
+            const valid = yield argon2_1.default.verify(user === null || user === void 0 ? void 0 : user.password, oldPassword);
+            if (!valid) {
+                return {
+                    errors: [
+                        {
+                            field: 'Wrong password',
+                            message: 'Wrong password',
+                        },
+                    ],
+                };
+            }
+            if (newPassword.length <= 6) {
+                return {
+                    errors: [
+                        {
+                            field: 'Password Error',
+                            message: 'Password length must be greater than 6 characters',
+                        },
+                    ],
+                };
+            }
+            yield User_1.User.update({ id: payload === null || payload === void 0 ? void 0 : payload.userID }, {
+                password: yield argon2_1.default.hash(newPassword),
+            });
+            refreshToken_1.refreshToken(res, auth_1.createRefreshToken(user));
+            return { user, accessToken: auth_1.createAccessToken(user) };
+        });
+    }
 };
 __decorate([
     type_graphql_1.Query(() => String),
@@ -225,6 +266,16 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "deleteAccount", null);
+__decorate([
+    type_graphql_1.Mutation(() => UserResponse),
+    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    __param(0, type_graphql_1.Arg('oldPassword')),
+    __param(1, type_graphql_1.Arg('newPassword')),
+    __param(2, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "changePassword", null);
 UserResolver = __decorate([
     type_graphql_1.Resolver()
 ], UserResolver);
