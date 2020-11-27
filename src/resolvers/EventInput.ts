@@ -10,4 +10,22 @@ export class EventInput {
 
   @Field()
   description: string;
+
+  @Field()
+  adultsOnly: boolean;
+
+  @Field()
+  time: string;
+
+  @Field()
+  date: string;
+
+  // @Field()
+  // city: string;
+
+  @Field()
+  address: string;
+
+  @Field()
+  extraInfo: string;
 }

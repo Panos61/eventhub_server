@@ -29,6 +29,30 @@ export class Event extends BaseEntity {
   @Column('text')
   description!: string;
 
+  @Field()
+  @Column('timestamp with time zone')
+  date!: string;
+
+  @Field()
+  @Column('timestamp with time zone')
+  time!: string;
+
+  // @Field()
+  // @Column('text')
+  // city!: string;
+
+  @Field()
+  @Column('text')
+  address!: string;
+
+  @Field()
+  @Column('boolean')
+  adultsOnly!: boolean;
+
+  @Field()
+  @Column('text', { nullable: true })
+  extraInfo!: string;
+
   @Field(() => Int)
   @Column()
   creatorId: number | string;
