@@ -81,6 +81,7 @@ export class UserResolver {
 
     // Hash password
     const hashedPassword = await argon2.hash(options.password);
+
     let user;
 
     try {
@@ -185,6 +186,7 @@ export class UserResolver {
       refreshToken(res, '');
     } catch (error) {
       console.log(error);
+      return false;
     }
     return true;
   }
@@ -194,7 +196,7 @@ export class UserResolver {
   async changePassword(
     @Arg('oldPassword') oldPassword: string,
     @Arg('newPassword') newPassword: string,
-    @Ctx() { payload, res }: myContext
+    @Ctx() { payload }: myContext
   ): Promise<UserResponse> {
     // Check if user exists
     const user = await User.findOne({ where: { id: payload?.userID } });
@@ -239,8 +241,6 @@ export class UserResolver {
         password: await argon2.hash(newPassword),
       }
     );
-
-    refreshToken(res, createRefreshToken(user));
 
     return { user, accessToken: createAccessToken(user) };
   }

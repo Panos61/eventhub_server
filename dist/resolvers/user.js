@@ -174,11 +174,12 @@ let UserResolver = class UserResolver {
             }
             catch (error) {
                 console.log(error);
+                return false;
             }
             return true;
         });
     }
-    changePassword(oldPassword, newPassword, { payload, res }) {
+    changePassword(oldPassword, newPassword, { payload }) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield User_1.User.findOne({ where: { id: payload === null || payload === void 0 ? void 0 : payload.userID } });
             if (!user) {
@@ -215,7 +216,6 @@ let UserResolver = class UserResolver {
             yield User_1.User.update({ id: payload === null || payload === void 0 ? void 0 : payload.userID }, {
                 password: yield argon2_1.default.hash(newPassword),
             });
-            refreshToken_1.refreshToken(res, auth_1.createRefreshToken(user));
             return { user, accessToken: auth_1.createAccessToken(user) };
         });
     }
