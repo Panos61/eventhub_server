@@ -25,6 +25,26 @@ __decorate([
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], EventInput.prototype, "description", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", Boolean)
+], EventInput.prototype, "adultsOnly", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], EventInput.prototype, "time", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], EventInput.prototype, "date", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], EventInput.prototype, "address", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], EventInput.prototype, "extraInfo", void 0);
 EventInput = __decorate([
     type_graphql_1.InputType()
 ], EventInput);
