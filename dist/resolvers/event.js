@@ -74,7 +74,6 @@ let EventResolver = class EventResolver {
                     .returning('*')
                     .execute();
                 event = result.raw[0];
-                console.log(payload === null || payload === void 0 ? void 0 : payload.userID);
             }
             catch (error) {
                 console.log(error);
@@ -109,6 +108,24 @@ let EventResolver = class EventResolver {
             return qb.getMany();
         });
     }
+    deleteUserEvents(creatorId, { payload }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            creatorId = payload === null || payload === void 0 ? void 0 : payload.userID;
+            try {
+                yield typeorm_1.getConnection()
+                    .getRepository(Event_1.Event)
+                    .createQueryBuilder()
+                    .delete()
+                    .where('creatorId = :creatorId', { creatorId: creatorId })
+                    .execute();
+            }
+            catch (error) {
+                console.log(error);
+                return false;
+            }
+            return true;
+        });
+    }
     musicEvents(limit, cursor) {
         return __awaiter(this, void 0, void 0, function* () {
             const realLimit = Math.min(50, limit);
@@ -125,6 +142,44 @@ let EventResolver = class EventResolver {
             const query = typeorm_1.getConnection()
                 .getRepository(Event_1.Event)
                 .find({ where: { topic: 'music' } });
+            return qb.getMany(), query;
+        });
+    }
+    sportEvents(limit, cursor) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const realLimit = Math.min(50, limit);
+            const qb = typeorm_1.getConnection()
+                .getRepository(Event_1.Event)
+                .createQueryBuilder('e')
+                .orderBy('"createdAt"', 'DESC')
+                .take(realLimit);
+            if (cursor) {
+                qb.where('"createdAt" < :cursor', {
+                    cursor: new Date(parseInt(cursor)),
+                });
+            }
+            const query = typeorm_1.getConnection()
+                .getRepository(Event_1.Event)
+                .find({ where: { topic: 'sports' } });
+            return qb.getMany(), query;
+        });
+    }
+    cinemaEvents(limit, cursor) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const realLimit = Math.min(50, limit);
+            const qb = typeorm_1.getConnection()
+                .getRepository(Event_1.Event)
+                .createQueryBuilder('e')
+                .orderBy('"createdAt"', 'DESC')
+                .take(realLimit);
+            if (cursor) {
+                qb.where('"createdAt" < :cursor', {
+                    cursor: new Date(parseInt(cursor)),
+                });
+            }
+            const query = typeorm_1.getConnection()
+                .getRepository(Event_1.Event)
+                .find({ where: { topic: 'cinema' } });
             return qb.getMany(), query;
         });
     }
@@ -160,6 +215,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], EventResolver.prototype, "events", null);
 __decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    __param(0, type_graphql_1.Arg('creatorId', () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], EventResolver.prototype, "deleteUserEvents", null);
+__decorate([
     type_graphql_1.Query(() => [Event_1.Event], { nullable: true }),
     __param(0, type_graphql_1.Arg('limit', () => type_graphql_1.Int)),
     __param(1, type_graphql_1.Arg('cursor', () => String, { nullable: true })),
@@ -167,6 +231,22 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], EventResolver.prototype, "musicEvents", null);
+__decorate([
+    type_graphql_1.Query(() => [Event_1.Event], { nullable: true }),
+    __param(0, type_graphql_1.Arg('limit', () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Arg('cursor', () => String, { nullable: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], EventResolver.prototype, "sportEvents", null);
+__decorate([
+    type_graphql_1.Query(() => [Event_1.Event], { nullable: true }),
+    __param(0, type_graphql_1.Arg('limit', () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Arg('cursor', () => String, { nullable: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], EventResolver.prototype, "cinemaEvents", null);
 EventResolver = __decorate([
     type_graphql_1.Resolver(Event_1.Event)
 ], EventResolver);

@@ -36,6 +36,31 @@ __decorate([
     __metadata("design:type", String)
 ], Event.prototype, "description", void 0);
 __decorate([
+    type_graphql_1.Field(),
+    typeorm_1.Column('timestamp with time zone'),
+    __metadata("design:type", String)
+], Event.prototype, "date", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    typeorm_1.Column('timestamp with time zone'),
+    __metadata("design:type", String)
+], Event.prototype, "time", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    typeorm_1.Column('text'),
+    __metadata("design:type", String)
+], Event.prototype, "address", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    typeorm_1.Column('boolean'),
+    __metadata("design:type", Boolean)
+], Event.prototype, "adultsOnly", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    typeorm_1.Column('text', { nullable: true }),
+    __metadata("design:type", String)
+], Event.prototype, "extraInfo", void 0);
+__decorate([
     type_graphql_1.Field(() => type_graphql_1.Int),
     typeorm_1.Column(),
     __metadata("design:type", Object)
