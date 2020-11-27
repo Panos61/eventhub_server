@@ -26,6 +26,16 @@ exports.registerValidator = (options) => {
             },
         ];
     }
+    if (options.password && options.confirmPassword) {
+        if (options.password != options.confirmPassword) {
+            return [
+                {
+                    field: 'Passwords are not matching',
+                    message: 'Password are not matching',
+                },
+            ];
+        }
+    }
     return null;
 };
 //# sourceMappingURL=registerValidator.js.map

@@ -25,6 +25,10 @@ __decorate([
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], RegisterInput.prototype, "password", void 0);
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], RegisterInput.prototype, "confirmPassword", void 0);
 RegisterInput = __decorate([
     type_graphql_1.InputType()
 ], RegisterInput);
